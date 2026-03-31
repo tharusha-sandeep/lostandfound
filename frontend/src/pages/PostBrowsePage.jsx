@@ -91,12 +91,14 @@ export default function PostBrowsePage() {
               All
             </button>
             <button 
+              data-testid="filter-type-lost"
               onClick={() => updateFilter('type', 'lost')}
               className={`flex-1 md:flex-none px-4 py-1.5 text-sm font-medium rounded-md transition ${currentType === 'lost' ? 'bg-red-500 shadow text-white' : 'text-gray-500 hover:text-gray-700'}`}
             >
               Lost
             </button>
             <button 
+              data-testid="filter-type-found"
               onClick={() => updateFilter('type', 'found')}
               className={`flex-1 md:flex-none px-4 py-1.5 text-sm font-medium rounded-md transition ${currentType === 'found' ? 'bg-blue-500 shadow text-white' : 'text-gray-500 hover:text-gray-700'}`}
             >
@@ -106,6 +108,7 @@ export default function PostBrowsePage() {
 
           <div className="relative w-full md:max-w-xs xl:max-w-md">
             <input 
+              data-testid="search-input"
               type="text" 
               placeholder="Search keyword..." 
               value={inputQ}
@@ -123,7 +126,7 @@ export default function PostBrowsePage() {
               )}
             </span>
             {activeFilterCount > 0 && (
-              <button onClick={clearAllFilters} className="text-xs text-red-600 hover:text-red-800 ml-2">
+              <button data-testid="clear-filters" onClick={clearAllFilters} className="text-xs text-red-600 hover:text-red-800 ml-2">
                 Clear All
               </button>
             )}
@@ -181,7 +184,7 @@ export default function PostBrowsePage() {
            </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div data-testid="post-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {posts.map(post => (
             <PostCard key={post._id} post={post} />
           ))}

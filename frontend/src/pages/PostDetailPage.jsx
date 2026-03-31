@@ -97,10 +97,12 @@ export default function PostDetailPage() {
              <span className={`px-2.5 py-1 text-xs font-bold uppercase tracking-wide rounded-md capitalize ${TYPE_COLORS[post.type] || 'bg-gray-100 text-gray-800'}`}>
                {post.type}
              </span>
-             <PostStatusBadge status={post.status} size="md" />
+             <span data-testid="post-status">
+               <PostStatusBadge status={post.status} size="md" />
+             </span>
            </div>
            
-           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 leading-tight">{post.title}</h1>
+           <h1 data-testid="post-title" className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 leading-tight">{post.title}</h1>
            
            <div className="flex flex-wrap items-center gap-5 text-sm font-medium text-gray-600 border-b border-gray-100 pb-6">
              <div className="flex items-center gap-2"><Tag size={16} className="text-gray-400"/> <span>{post.category}</span></div>
@@ -120,12 +122,14 @@ export default function PostDetailPage() {
            {isOwner && post.status !== 'resolved' && (
              <div className="mt-10 pt-6 border-t border-gray-100 flex items-center gap-3">
                <Link 
+                 data-testid="edit-button"
                  to={`/posts/${id}/edit`} 
                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition"
                >
                  <Edit2 className="w-4 h-4 mr-2" /> Edit Details
                </Link>
                <button 
+                 data-testid="delete-button"
                  onClick={() => setShowDeleteModal(true)}
                  className="inline-flex items-center px-4 py-2 border border-red-200 rounded-lg text-sm font-medium text-red-700 bg-red-50 hover:bg-red-100 transition"
                >
@@ -167,7 +171,9 @@ export default function PostDetailPage() {
 
             {/* Match Panel via props routing */}
             {(isOwner || isAdmin) && (
-               <MatchSuggestionsPanel postId={id} />
+               <div data-testid="match-panel">
+                 <MatchSuggestionsPanel postId={id} />
+               </div>
             )}
 
           </div>
@@ -191,6 +197,7 @@ export default function PostDetailPage() {
                 Cancel
               </button>
               <button 
+                data-testid="delete-confirm"
                 onClick={handleDeleteCallback}
                 disabled={isDeleting}
                 className="px-5 py-2.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50 flex items-center transition shadow-sm"

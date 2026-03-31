@@ -38,6 +38,7 @@ export default function MyPostsPage() {
           {['Active', 'Resolved', 'Removed'].map((tab) => (
             <button
               key={tab}
+              data-testid={`tab-${tab.toLowerCase()}`}
               onClick={() => setActiveTab(tab)}
               className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-all shadow-sm ${
                 activeTab === tab
@@ -76,7 +77,7 @@ export default function MyPostsPage() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div data-testid="post-list" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredPosts.map(post => (
             <PostCard key={post._id} post={post} />
           ))}
