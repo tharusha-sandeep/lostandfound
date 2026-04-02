@@ -39,7 +39,9 @@ app.get('/api/health', (req, res) => {
 
 // ─── API Routes ───────────────────────────────────────────────────────────────
 const postRoutes = require('./routes/postRoutes');
+const authRoutes = require('./routes/auth');
 app.use('/api/posts', postRoutes);
+app.use('/api/auth', authRoutes);
 
 // ─── Global Error Handler (must be last) ──────────────────────────────────────
 app.use(errorHandler);
