@@ -1,16 +1,12 @@
 import { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { loginUser } from '../services/authService';
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import { resetPassword } from '../services/authService';
 import toast from 'react-hot-toast';
 
-export default function LoginPage() {
-  const { login } = useAuth();
+export default function ResetPasswordPage() {
+  const { token } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
-  const from = location.state?.from?.pathname || '/posts';
-
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({ password: '', confirmPassword: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -21,16 +17,25 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
 
+    if (form.password !== form.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (form.password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    setLoading(true);
     try {
-      const data = await loginUser(form);
-      login(data.token);
-      toast.success(`Welcome back, ${data.user.name}!`);
-      navigate(from, { replace: true });
+      await resetPassword(token, form.password, form.confirmPassword);
+      toast.success('Password reset successful!');
+      navigate('/login');
     } catch (err) {
-      const msg = err.response?.data?.message || 'Login failed';
+      const msg = err.response?.data?.message || 'Reset failed. Link may have expired.';
       setError(msg);
     } finally {
       setLoading(false);
@@ -40,8 +45,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-md p-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2 text-center">Welcome Back</h1>
-        <p className="text-gray-500 text-center mb-8">Sign in to your account</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2 text-center">Reset Password</h1>
+        <p className="text-gray-500 text-center mb-8">Enter your new password below</p>
 
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
@@ -51,20 +56,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="you@university.lk"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
             <input
               type="password"
               name="password"
@@ -72,14 +64,21 @@ export default function LoginPage() {
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              placeholder="••••••••"
+              placeholder="At least 6 characters"
             />
           </div>
 
-          <div className="flex justify-end">
-            <Link to="/forgot-password" className="text-sm text-indigo-600 hover:underline">
-              Forgot password?
-            </Link>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              value={form.confirmPassword}
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              placeholder="Re-enter new password"
+            />
           </div>
 
           <button
@@ -87,14 +86,13 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full py-3 px-4 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition disabled:opacity-50"
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Resetting...' : 'Reset Password'}
           </button>
         </form>
 
         <p className="text-center text-sm text-gray-600 mt-6">
-          Don't have an account?{' '}
-          <Link to="/register" className="text-indigo-600 font-medium hover:underline">
-            Register here
+          <Link to="/login" className="text-indigo-600 font-medium hover:underline">
+            Back to login
           </Link>
         </p>
       </div>

@@ -14,18 +14,19 @@ import PostDetailPage from './pages/PostDetailPage';
 import PostEditPage from './pages/PostEditPage';
 import MyPostsPage from './pages/MyPostsPage';
 import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import NotFoundPage from './pages/NotFoundPage';
 
-// Initialize React Query client with 2-minute stale time
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 2 * 60 * 1000, // 2 minutes
+      staleTime: 2 * 60 * 1000,
     },
   },
 });
 
-// Layout wrapper applied to all routes
 function AppLayout() {
   return (
     <div className="min-h-screen bg-gray-50">
@@ -44,23 +45,25 @@ function App() {
         <BrowserRouter>
           <Toaster position="top-right" />
           <Routes>
-            {/* All routes are wrapped in AppLayout which includes the Navbar */}
             <Route element={<AppLayout />}>
-              
+
               {/* Public Routes */}
               <Route path="/" element={<Navigate to="/posts" replace />} />
               <Route path="/posts" element={<PostBrowsePage />} />
               <Route path="/posts/:id" element={<PostDetailPage />} />
               <Route path="/login" element={<LoginPage />} />
-              
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+
               {/* Authenticated Routes */}
               <Route element={<ProtectedRoute />}>
                 <Route path="/posts/new" element={<PostCreatePage />} />
                 <Route path="/posts/:id/edit" element={<PostEditPage />} />
                 <Route path="/my-posts" element={<MyPostsPage />} />
               </Route>
-              
-              {/* 404 Catch-All */}
+
+              {/* 404 */}
               <Route path="*" element={<NotFoundPage />} />
 
             </Route>
