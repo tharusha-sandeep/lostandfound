@@ -30,7 +30,10 @@ const verifyToken = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+req.user = {
+  ...decoded,
+  _id: decoded.id  // map id → _id so postController works
+};
     next();
   } catch {
     return res.status(401).json({ message: 'Invalid or expired token' });

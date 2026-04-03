@@ -97,7 +97,7 @@ const getPostById = async (req, res) => {
 // ─── GET /api/posts/mine ──────────────────────────────────────────────────────
 
 const getMyPosts = async (req, res) => {
-  const filter = { authorId: req.user._id, isDeleted: false };
+  const filter = { authorId: req.user.id || req.user._id, isDeleted: false };
 
   const [posts, total] = await Promise.all([
     Post.find(filter).sort({ createdAt: -1 }).lean(),
@@ -112,7 +112,7 @@ const getMyPosts = async (req, res) => {
 const createPost = async (req, res) => {
   const post = await Post.create({
     ...req.body,
-    authorId: req.user._id,
+    authorId: req.user.id || req.user._id,
     status:   'open',
   });
 
@@ -137,7 +137,7 @@ const updatePost = async (req, res) => {
     return res.status(404).json({ message: 'Post not found' });
   }
 
-  if (post.authorId.toString() !== req.user._id) {
+  if (post.authorId.toString() !== (req.user.id || req.user._id)) {
     return res.status(403).json({ message: 'Not authorised' });
   }
 
@@ -170,7 +170,7 @@ const deletePost = async (req, res) => {
     return res.status(404).json({ message: 'Post not found' });
   }
 
-  if (post.authorId.toString() !== req.user._id) {
+  if (post.authorId.toString() !== (req.user.id || req.user._id)) {
     return res.status(403).json({ message: 'Not authorised' });
   }
 
