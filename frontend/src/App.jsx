@@ -24,6 +24,8 @@ import AdminPostsPage from './pages/AdminPostsPage';
 import NotFoundPage from './pages/NotFoundPage';
 import MyClaimsPage from './pages/MyClaimsPage';
 import AdminClaimsPage from './pages/AdminClaimsPage';
+import AdminHeatmapPage from './pages/AdminHeatmapPage';
+import HeatmapPage from './pages/HeatmapPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -68,6 +70,7 @@ function App() {
                 <Route path="/posts/:id/edit" element={<PostEditPage />} />
                 <Route path="/my-posts" element={<MyPostsPage />} />
                 <Route path="/my-claims" element={<MyClaimsPage />} />
+                <Route path="/heatmap" element={<HeatmapPage />} />
               </Route>
 
               {/* Admin Only Routes */}
@@ -76,6 +79,7 @@ function App() {
                 <Route path="/admin/users" element={<AdminUsersPage />} />
                 <Route path="/admin/posts" element={<AdminPostsPage />} />
                 <Route path="/admin/claims" element={<AdminClaimsPage />} />
+                <Route path="/admin/heatmap" element={<AdminHeatmapPage />} />
               </Route>
 
               {/* 404 */}

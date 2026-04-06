@@ -38,14 +38,16 @@ app.get('/api/health', (req, res) => {
 });
 
 // ─── API Routes ───────────────────────────────────────────────────────────────
-const postRoutes = require('./routes/postRoutes');
-const authRoutes = require('./routes/auth');
-const adminRoutes = require('./routes/admin');
-const claimRoutes = require('./routes/claims');
-app.use('/api/posts', postRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/claims', claimRoutes);
+const postRoutes   = require('./routes/postRoutes');
+const authRoutes   = require('./routes/auth');
+const adminRoutes  = require('./routes/admin');
+const claimRoutes  = require('./routes/claims');
+const mapPinRoutes = require('./routes/mapPins');
+app.use('/api/posts',   postRoutes);
+app.use('/api/auth',    authRoutes);
+app.use('/api/admin',   adminRoutes);
+app.use('/api/claims',  claimRoutes);
+app.use('/api/mappins', mapPinRoutes);
 
 // ─── Global Error Handler (must be last) ──────────────────────────────────────
 app.use(errorHandler);

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Users, FileText,ClipboardList, ShieldCheck } from 'lucide-react';
+import { Users, FileText,ClipboardList, ShieldCheck, MapPin } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function AdminDashboardPage() {
@@ -29,6 +29,11 @@ const cards = [
     link: '/admin/claims',
     color: 'bg-purple-500',
   },
+  { title: 'Campus Heatmap',
+    description: 'Tag items on floor maps and view density heatmaps.',
+    icon: MapPin, link: '/admin/heatmap',
+    color: 'bg-orange-500' 
+  }
 ];
 
   return (
