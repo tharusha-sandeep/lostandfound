@@ -10,8 +10,8 @@ const { adminOnly } = require('../middleware/authMiddleware');
 const {
   sendClaimStatusEmail,
   sendNewClaimAlertEmail,
+  sendFinderNotificationEmail,
 } = require('../utils/emailService');
-
 // ─── SUBMIT A CLAIM ──────────────────────────────────────
 // POST /api/claims
 router.post('/', verifyToken, async (req, res, next) => {
@@ -177,12 +177,26 @@ router.patch('/:id', verifyToken, adminOnly, async (req, res, next) => {
     }
 
     // send email to claimant
-    await sendClaimStatusEmail(
-      claim.claimantId.email,
-      status,
+await sendClaimStatusEmail(
+  claim.claimantId.email,
+  status,
+  claim.postId.title,
+  adminNote || ''
+);
+
+// if approved also email the finder (post owner)
+if (status === 'approved') {
+  const finder = await User.findById(claim.postId.authorId).select('name email');
+  if (finder) {
+    await sendFinderNotificationEmail(
+      finder.email,
+      finder.name,
       claim.postId.title,
+      claim.claimantId.name,
       adminNote || ''
     );
+  }
+}
 
     res.json({
       message: `Claim ${status} successfully`,

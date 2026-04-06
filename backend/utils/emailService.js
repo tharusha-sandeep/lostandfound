@@ -166,10 +166,34 @@ const sendPasswordResetEmail = async (to, name, token) => {
   await transporter.sendMail(mailOptions);
 };
 
+// ─── SEND FINDER NOTIFICATION EMAIL ─────────────────────
+// sent to the person who posted the found item when claim is approved
+const sendFinderNotificationEmail = async (to, finderName, itemTitle, claimantName, adminNote = '') => {
+  const mailOptions = {
+    from: `"CampusLost&Found" <${process.env.EMAIL_USER}>`,
+    to,
+    subject: `📦 Item claimed — ${itemTitle}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #00BFC8;">📦 Someone Has Claimed Your Found Item</h2>
+        <p>Hi ${finderName},</p>
+        <p>The item you reported as found — <strong>${itemTitle}</strong> — has been successfully claimed by <strong>${claimantName}</strong> after admin verification.</p>
+        ${adminNote ? `<p><strong>Admin note:</strong> ${adminNote}</p>` : ''}
+        <p>Please hand over the item to the claimant or bring it to the campus lost & found office.</p>
+        <p>Thank you for helping return lost items to their owners!</p>
+        <br/>
+        <p style="color: #888; font-size: 12px;">CampusLost&Found — University Item Recovery System</p>
+      </div>
+    `
+  };
+  await transporter.sendMail(mailOptions);
+};
+
 module.exports = {
   sendClaimStatusEmail,
   sendMatchNotificationEmail,
   sendNewClaimAlertEmail,
   sendVerificationEmail,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  sendFinderNotificationEmail,
 };

@@ -51,6 +51,11 @@ export default function PostDetailPage() {
   const isStudent = user && !isAdmin;
   const canClaim = isStudent && !isOwner && post.status !== 'resolved';
 
+  // button text depends on post type
+  // lost post = someone lost it = finder clicks "I Found This Item"
+  // found post = someone found it = owner clicks "Claim This Item"
+  const claimButtonText = post.type === 'lost' ? 'I Found This Item' : 'Claim This Item';
+
   const formattedDate = new Date(post.incidentDate).toLocaleDateString('en-GB', {
     day: 'numeric', month: 'long', year: 'numeric'
   });
@@ -80,7 +85,7 @@ export default function PostDetailPage() {
       await submitClaim(id, claimDetail.trim());
       setClaimSubmitted(true);
       setShowClaimModal(false);
-      toast.success('Claim submitted! Admin will review and contact you.');
+      toast.success('Submitted! Admin will review and contact you.');
     } catch (err) {
       const msg = err.response?.data?.message || 'Failed to submit claim';
       toast.error(msg);
@@ -120,7 +125,9 @@ export default function PostDetailPage() {
             </span>
           </div>
           
-          <h1 data-testid="post-title" className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 leading-tight">{post.title}</h1>
+          <h1 data-testid="post-title" className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 leading-tight">
+            {post.title}
+          </h1>
           
           <div className="flex flex-wrap items-center gap-5 text-sm font-medium text-gray-600 border-b border-gray-100 pb-6">
             <div className="flex items-center gap-2"><Tag size={16} className="text-gray-400"/> <span>{post.category}</span></div>
@@ -128,27 +135,39 @@ export default function PostDetailPage() {
             <div className="flex items-center gap-2"><Calendar size={16} className="text-gray-400"/> <span>{formattedDate}</span></div>
           </div>
 
-          {/* Description */}
-          <div className="pt-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-3">Description</h2>
-            <p className="text-gray-700 whitespace-pre-wrap leading-relaxed text-[15px]">
-              {post.description}
-            </p>
-          </div>
+          {/* Description — only visible to owner and admin */}
+          {(isOwner || isAdmin) && (
+            <div className="pt-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-3">Description</h2>
+              <p className="text-gray-700 whitespace-pre-wrap leading-relaxed text-[15px]">
+                {post.description}
+              </p>
+            </div>
+          )}
 
-          {/* Claim Button — for students who don't own this post */}
+          {/* Message for non-owners viewing the post */}
+          {!isOwner && !isAdmin && (
+            <div className="pt-6">
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-sm text-gray-500">
+                🔒 Full description is only visible to the post owner and admin.
+                If this is your item, submit a claim with identifying details below.
+              </div>
+            </div>
+          )}
+
+          {/* Claim Button */}
           {canClaim && (
             <div className="mt-8 pt-6 border-t border-gray-100">
               {claimSubmitted ? (
                 <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-green-800 text-sm font-medium">
-                  ✅ Your claim has been submitted. Admin will review and contact you via email.
+                  ✅ Your submission has been sent. Admin will review and contact you via email.
                 </div>
               ) : (
                 <button
                   onClick={() => setShowClaimModal(true)}
                   className="w-full sm:w-auto px-6 py-3 bg-indigo-600 text-white font-medium rounded-xl hover:bg-indigo-700 transition"
                 >
-                  Claim This Item
+                  {claimButtonText}
                 </button>
               )}
             </div>
@@ -202,19 +221,19 @@ export default function PostDetailPage() {
               {post.status === 'matched' && (
                 <div className="mt-5 bg-amber-50 border border-amber-200 text-amber-800 text-sm p-4 rounded-xl flex items-start gap-3 shadow-sm">
                   <span className="text-lg leading-none">⚡</span>
-                  <span className="font-medium leading-relaxed">A potential match has been found. Check the suggestions provided below.</span>
+                  <span className="font-medium leading-relaxed">A potential match has been found.</span>
                 </div>
               )}
               
               {post.status === 'resolved' && (
                 <div className="mt-5 bg-green-50 border border-green-200 text-green-800 text-sm p-4 rounded-xl flex items-start gap-3 shadow-sm">
                   <span className="text-lg leading-none">✅</span>
-                  <span className="font-medium leading-relaxed">This item has been successfully recovered and the case is resolved.</span>
+                  <span className="font-medium leading-relaxed">This item has been successfully recovered.</span>
                 </div>
               )}
             </div>
             
-            {/* Desktop Match Panel */}
+            {/* Match Panel — owner and admin only */}
             <div className="hidden lg:block">
               {(isOwner || isAdmin) && (
                 <div data-testid="match-panel">
@@ -240,7 +259,7 @@ export default function PostDetailPage() {
       <ConfirmModal
         isOpen={showDeleteModal}
         title="Remove permanently?"
-        message="Are you sure you want to remove this post? It will no longer appear in searches or match results. This action cannot be undone."
+        message="Are you sure you want to remove this post? This action cannot be undone."
         confirmLabel="Yes, Remove"
         confirmClassName="bg-red-600 hover:bg-red-700 text-white"
         confirmTestId="delete-confirm"
@@ -253,10 +272,10 @@ export default function PostDetailPage() {
       {showClaimModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Claim This Item</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">{claimButtonText}</h2>
             <p className="text-gray-500 text-sm mb-6">
-              Provide a private identifying detail about this item to verify your claim. 
-              This will only be visible to the admin.
+              Provide a private identifying detail to verify your claim. 
+              This will only be visible to the admin — not to the public.
             </p>
             <form onSubmit={handleClaimSubmit} className="space-y-4">
               <div>
@@ -268,7 +287,11 @@ export default function PostDetailPage() {
                   onChange={(e) => setClaimDetail(e.target.value)}
                   rows={4}
                   required
-                  placeholder="e.g. The watch has a scratch on the left side of the strap, and my initials R.S. are engraved on the back..."
+                  placeholder={
+                    post.type === 'lost'
+                      ? 'e.g. I found this near the library entrance on Monday morning, it was next to a bench...'
+                      : 'e.g. The watch has my initials R.S. engraved on the back and a scratch on the left strap...'
+                  }
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm resize-none"
                 />
                 <p className="text-xs text-gray-400 mt-1">{claimDetail.length}/500 characters (min 10)</p>
@@ -286,7 +309,7 @@ export default function PostDetailPage() {
                   disabled={claimLoading || claimDetail.trim().length < 10}
                   className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition disabled:opacity-50"
                 >
-                  {claimLoading ? 'Submitting...' : 'Submit Claim'}
+                  {claimLoading ? 'Submitting...' : 'Submit'}
                 </button>
               </div>
             </form>

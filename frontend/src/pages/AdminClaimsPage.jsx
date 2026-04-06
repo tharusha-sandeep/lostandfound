@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getAllClaims, reviewClaim } from '../services/claimService';
+import { getMatchesForPost } from '../services/postService';
 import { ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -10,12 +11,24 @@ const STATUS_STYLES = {
   rejected: 'bg-red-100 text-red-700',
 };
 
+function MatchScoreBadge({ score }) {
+  const color = score >= 80 ? 'bg-green-100 text-green-700'
+    : score >= 60 ? 'bg-yellow-100 text-yellow-700'
+    : 'bg-red-100 text-red-700';
+  return (
+    <span className={`px-2.5 py-1 text-xs font-bold rounded-full ${color}`}>
+      {score}% match
+    </span>
+  );
+}
+
 export default function AdminClaimsPage() {
   const [claims, setClaims] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('pending');
   const [actionLoading, setActionLoading] = useState(null);
   const [adminNote, setAdminNote] = useState({});
+  const [matchScores, setMatchScores] = useState({});
 
   useEffect(() => {
     fetchClaims();
@@ -26,11 +39,33 @@ export default function AdminClaimsPage() {
     try {
       const data = await getAllClaims(filter);
       setClaims(data.claims);
+      // fetch match scores for each claim's post
+      fetchMatchScores(data.claims);
     } catch {
       toast.error('Failed to load claims');
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchMatchScores = async (claims) => {
+    const scores = {};
+    await Promise.all(
+      claims.map(async (claim) => {
+        if (!claim.postId?._id) return;
+        try {
+          const matches = await getMatchesForPost(claim.postId._id);
+          // find if claimant has a matching post
+          const claimantMatch = matches.find(
+            m => m.matchedPostSnapshot?.authorId?.toString() === claim.claimantId?._id?.toString()
+          );
+          scores[claim._id] = claimantMatch ? claimantMatch.score : null;
+        } catch {
+          scores[claim._id] = null;
+        }
+      })
+    );
+    setMatchScores(scores);
   };
 
   const handleReview = async (claimId, status) => {
@@ -39,7 +74,7 @@ export default function AdminClaimsPage() {
     setActionLoading(claimId);
     try {
       await reviewClaim(claimId, status, note);
-      toast.success(`Claim ${status} successfully`);
+      toast.success(`Claim ${status} successfully. Emails sent to both parties.`);
       setClaims(claims.filter(c => c._id !== claimId));
     } catch {
       toast.error('Action failed');
@@ -87,64 +122,106 @@ export default function AdminClaimsPage() {
           No {filter} claims.
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-6">
           {claims.map((claim) => (
             <div key={claim._id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
               
-              {/* Claim Status Badge */}
-              <div className="flex items-center justify-between mb-4">
-                <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${STATUS_STYLES[claim.status]}`}>
-                  {claim.status.charAt(0).toUpperCase() + claim.status.slice(1)}
-                </span>
+              {/* Header row */}
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                <div className="flex items-center gap-3">
+                  <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${STATUS_STYLES[claim.status]}`}>
+                    {claim.status.charAt(0).toUpperCase() + claim.status.slice(1)}
+                  </span>
+                  {matchScores[claim._id] != null && (
+                    <MatchScoreBadge score={matchScores[claim._id]} />
+                  )}
+                  {matchScores[claim._id] === null && (
+                    <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-500">
+                      No system match found
+                    </span>
+                  )}
+                </div>
                 <span className="text-xs text-gray-400">
-                  {new Date(claim.createdAt).toLocaleDateString('en-GB')}
+                  Submitted {new Date(claim.createdAt).toLocaleDateString('en-GB')}
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Side by side comparison */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 
-                {/* Post Details */}
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="text-xs font-medium text-gray-500 uppercase mb-3">Post Details</h3>
+                {/* Post Details — left */}
+                <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
+                  <h3 className="text-xs font-bold text-blue-600 uppercase mb-3">
+                    📋 Reported Post
+                  </h3>
                   <Link
                     to={`/posts/${claim.postId?._id}`}
                     className="font-semibold text-gray-900 hover:text-indigo-600 transition block mb-2"
                   >
                     {claim.postId?.title}
                   </Link>
-                  <div className="space-y-1 text-sm text-gray-600">
-                    <p><span className="font-medium">Type:</span> {claim.postId?.type}</p>
-                    <p><span className="font-medium">Category:</span> {claim.postId?.category}</p>
-                    <p><span className="font-medium">Zone:</span> {claim.postId?.zone}</p>
-                    <p><span className="font-medium">Status:</span> {claim.postId?.status}</p>
+                  <div className="space-y-1.5 text-sm text-gray-600">
+                    <div className="flex justify-between">
+                      <span className="font-medium">Type</span>
+                      <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${
+                        claim.postId?.type === 'lost' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+                      }`}>{claim.postId?.type}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Category</span>
+                      <span>{claim.postId?.category}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Zone</span>
+                      <span>{claim.postId?.zone}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Status</span>
+                      <span>{claim.postId?.status}</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Claimant Details */}
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="text-xs font-medium text-gray-500 uppercase mb-3">Claimant Details</h3>
-                  <div className="space-y-1 text-sm text-gray-600">
-                    <p><span className="font-medium">Name:</span> {claim.claimantId?.name}</p>
-                    <p><span className="font-medium">Email:</span> {claim.claimantId?.email}</p>
-                    <p><span className="font-medium">Faculty:</span> {claim.claimantId?.faculty}</p>
+                {/* Claimant Details — right */}
+                <div className="bg-purple-50 border border-purple-100 rounded-lg p-4">
+                  <h3 className="text-xs font-bold text-purple-600 uppercase mb-3">
+                    👤 Claimant
+                  </h3>
+                  <p className="font-semibold text-gray-900 mb-2">{claim.claimantId?.name}</p>
+                  <div className="space-y-1.5 text-sm text-gray-600">
+                    <div className="flex justify-between">
+                      <span className="font-medium">Email</span>
+                      <span className="text-xs">{claim.claimantId?.email}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-medium">Faculty</span>
+                      <span>{claim.claimantId?.faculty}</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Identifying Detail */}
-              <div className="mt-4 p-4 bg-indigo-50 border border-indigo-100 rounded-lg">
-                <h3 className="text-xs font-medium text-indigo-700 uppercase mb-2">
-                  Private Identifying Detail
+              <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-lg mb-4">
+                <h3 className="text-xs font-bold text-indigo-700 uppercase mb-2">
+                  🔒 Private Identifying Detail
                 </h3>
                 <p className="text-sm text-gray-800">{claim.identifyingDetail}</p>
               </div>
 
-              {/* Admin Actions — only for pending */}
+              {/* Match score explanation */}
+              {matchScores[claim._id] != null && (
+                <div className="p-3 bg-yellow-50 border border-yellow-100 rounded-lg mb-4 text-xs text-yellow-800">
+                  ⚡ The system found a <strong>{matchScores[claim._id]}%</strong> match between this post and a post by the claimant — based on category, zone, and date proximity.
+                </div>
+              )}
+
+              {/* Admin Actions */}
               {claim.status === 'pending' && (
-                <div className="mt-4 space-y-3">
+                <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Note to claimant (optional)
+                      Note to both parties (optional)
                     </label>
                     <input
                       type="text"
@@ -158,16 +235,16 @@ export default function AdminClaimsPage() {
                     <button
                       onClick={() => handleReview(claim._id, 'approved')}
                       disabled={actionLoading === claim._id}
-                      className="flex-1 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+                      className="flex-1 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition disabled:opacity-50"
                     >
-                      ✓ Approve
+                      ✓ Approve — Email both parties
                     </button>
                     <button
                       onClick={() => handleReview(claim._id, 'rejected')}
                       disabled={actionLoading === claim._id}
-                      className="flex-1 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition disabled:opacity-50"
+                      className="flex-1 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition disabled:opacity-50"
                     >
-                      ✗ Reject
+                      ✗ Reject — Email claimant
                     </button>
                   </div>
                 </div>
@@ -175,7 +252,7 @@ export default function AdminClaimsPage() {
 
               {/* Show admin note if already reviewed */}
               {claim.status !== 'pending' && claim.adminNote && (
-                <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-600">
+                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-600">
                   <span className="font-medium">Admin note: </span>{claim.adminNote}
                 </div>
               )}

@@ -1,34 +1,35 @@
 import { Link } from 'react-router-dom';
-import { Users, FileText, ShieldCheck } from 'lucide-react';
+import { Users, FileText,ClipboardList, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function AdminDashboardPage() {
   const { user } = useAuth();
 
-  const cards = [
-    {
-      title: 'Manage Users',
-      description: 'View all registered students, ban or remove accounts.',
-      icon: Users,
-      link: '/admin/users',
-      color: 'bg-blue-500',
-    },
-    {
-      title: 'Manage Posts',
-      description: 'View all lost and found posts, update their status.',
-      icon: FileText,
-      link: '/admin/posts',
-      color: 'bg-green-500',
-    },
+ 
 
-    {
+const cards = [
+  {
+    title: 'Manage Users',
+    description: 'View all registered students, ban or remove accounts.',
+    icon: Users,
+    link: '/admin/users',
+    color: 'bg-blue-500',
+  },
+  {
+    title: 'Manage Posts',
+    description: 'View all lost and found posts, update their status.',
+    icon: FileText,
+    link: '/admin/posts',
+    color: 'bg-green-500',
+  },
+  {
     title: 'Manage Claims',
-    description: 'Review pending claims, approve or reject with email notification.',
-    icon: ShieldCheck,
+    description: 'Review pending claims, approve or reject with email notification to both parties.',
+    icon: ClipboardList,
     link: '/admin/claims',
     color: 'bg-purple-500',
-    },
-  ];
+  },
+];
 
   return (
     <div className="max-w-5xl mx-auto">
