@@ -48,6 +48,7 @@ app.use('/api/auth',    authRoutes);
 app.use('/api/admin',   adminRoutes);
 app.use('/api/claims',  claimRoutes);
 app.use('/api/mappins', mapPinRoutes);
+app.use('/api/analytics', require('./routes/analytics'));
 
 // ─── Global Error Handler (must be last) ──────────────────────────────────────
 app.use(errorHandler);

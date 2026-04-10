@@ -26,6 +26,7 @@ import MyClaimsPage from './pages/MyClaimsPage';
 import AdminClaimsPage from './pages/AdminClaimsPage';
 import AdminHeatmapPage from './pages/AdminHeatmapPage';
 import HeatmapPage from './pages/HeatmapPage';
+import AdminAnalyticsPage from './pages/AdminAnalyticsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -80,6 +81,7 @@ function App() {
                 <Route path="/admin/posts" element={<AdminPostsPage />} />
                 <Route path="/admin/claims" element={<AdminClaimsPage />} />
                 <Route path="/admin/heatmap" element={<AdminHeatmapPage />} />
+                <Route path="/admin/analytics" element={<AdminAnalyticsPage />} />
               </Route>
 
               {/* 404 */}

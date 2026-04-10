@@ -67,6 +67,9 @@ export default function Navbar() {
                   <Link to="/admin/heatmap" className="text-orange-600 hover:text-orange-800 font-medium transition">
                     🗺️ Heatmap
                   </Link>
+                  <Link to="/admin/analytics" className="text-rose-600 hover:text-rose-800 font-medium transition">
+                    📊 Analytics
+                  </Link>
                 </>
               )}
             </div>
